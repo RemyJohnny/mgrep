@@ -31,11 +31,14 @@ func exploreDir(wl *worklist.WorkList,path string){
 	}
 }
 
+// args struct
 var args struct{
 	SearchKey string `arg:"positional,required"`
 	SearchDir string `arg:"positional"`
 }
 
+// function used in goroutine to search a file and place the result in the result channel if there is a match.
+// a worker
 func work(wg *sync.WaitGroup,wl *worklist.WorkList,key string,results chan<- worker.Result){
 	defer wg.Done()
 	for{
@@ -53,6 +56,7 @@ func work(wg *sync.WaitGroup,wl *worklist.WorkList,key string,results chan<- wor
 	}
 }
 
+//prints result from the the result channel
 func printResults(wg *sync.WaitGroup,signal <-chan int, results <-chan worker.Result){
 	matchesFound := 0
 	for{
@@ -74,35 +78,47 @@ func printResults(wg *sync.WaitGroup,signal <-chan int, results <-chan worker.Re
 func main(){
 	arg.MustParse(&args)
 
+	//wait Group for workers
 	var workersWg sync.WaitGroup
 
+	// creates a buffered channel for workList
 	wl := worklist.New(100)
 
 	results := make(chan worker.Result,100)
 
+	//number of workers i.e number of goroutine spawned 
 	workersNum := 10
 
 	workersWg.Add(1)
+	// goroutine to explore directory
 	go func(){
 		defer workersWg.Done()
 		exploreDir(&wl,args.SearchDir)
 		wl.Finalize(workersNum)
 	}()
 
+	//spawns goroutine according to the number or workers specified(workersNum)
 	for i := 0; i < workersNum; i++{
 		workersWg.Add(1)
 		go work(&workersWg,&wl,args.SearchKey,results)
 	}
 
+	//channel used to signal result printer that all work is done
 	blockWorkersWg := make(chan int)
 
+	//goroutine used to wait for workers to avoid blocking the result printer
 	go func(){
 		workersWg.Wait()
+		//signals the printer that all work is done
 		close(blockWorkersWg)
 	}()
 
+	//printer's wait group
 	var printWg sync.WaitGroup
 	printWg.Add(1)
+	// goroutine used for printing
 	go printResults(&printWg,blockWorkersWg,results)
+
+	//waits for the printer and exits the program
 	printWg.Wait()
 }
