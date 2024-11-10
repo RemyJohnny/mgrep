@@ -17,12 +17,15 @@ type Results struct {
 	inner []Result
 }
 
+// creates a new Result struct
 func New(line string,lineNum int,path string) Result{
 	return Result{line,lineNum,path}
 }
 
-func searchFile(path string, key string) *Results {
+// function to search a file with a key string
+func SearchFile(path string, key string) *Results {
 	file,err := os.Open(path)
+	defer file.Close()
 	if err != nil {
 		fmt.Println("Error : ", err)
 		return nil
