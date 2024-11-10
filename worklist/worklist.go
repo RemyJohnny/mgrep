@@ -1,7 +1,7 @@
 package worklist
 
 type Entry struct{
-	path string
+	Path string
 }
 
 type WorkList struct{
@@ -32,7 +32,7 @@ func NewJob( path string) Entry{
 }
 
 // spams all the workers with a blank job (Entry). Indication for them to terminate
-func (w *WorkList) finalize(workersNum int ){
+func (w *WorkList) Finalize(workersNum int ){
 	for i := 0; i < workersNum; i++{
 		w.Add(Entry{""})
 	}

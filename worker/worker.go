@@ -14,7 +14,7 @@ type Result struct {
 }
 
 type Results struct {
-	inner []Result
+	Inner []Result
 }
 
 // creates a new Result struct
@@ -38,14 +38,18 @@ func SearchFile(path string, key string) *Results {
 	for scanner.Scan(){
 		if strings.Contains(scanner.Text(),key){
 			r := New(scanner.Text(),lineNum,path)
-			results.inner = append(results.inner, r)
+			results.Inner = append(results.Inner, r)
 		}
 		lineNum++
 	}
-	if len(results.inner) == 0{
+	if len(results.Inner) == 0{
 		return nil
 	}else{
 		return &results
 	}
 
+}
+
+func ResultTempl(result *Result) string {
+	return fmt.Sprintf("%v[%v]:%v",result.path,result.lineNum,result.line)
 }
